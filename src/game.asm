@@ -74,6 +74,7 @@ ResetCells:
 
     jr $ra
 
+.globl GetCell
 # Gets the current value in cell at (x,y) and which player number it belongs to
 # $a0 = x-coordinate
 # $a1 = y-coordinate
@@ -88,7 +89,7 @@ GetCell:
     add $t2, $s0, $t1 # $t2 = base + (x + ly)
 
     # Gets byte with player and value data
-    lb $t3, 0($t2)
+    lbu $t3, 0($t2)
 
     andi $v0, $t3, 127 # 01111111 -> Removes first player bit from value
     srl $v1, $t3, 7
@@ -96,6 +97,7 @@ GetCell:
     jr $ra
 
 
+.globl SetCell
 # Sets the cell at (x,y) for a certain player number
 # $a0 = x-coordinate
 # $a1 = y-coordinate

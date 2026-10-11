@@ -5,6 +5,11 @@
 Colors:
     .word 0x000000 # Black (0)
     .word 0xFFFFFF # White (1)
+    .word 0x89714D # Cell Fill (2)
+    .word 0x6B5435 # Border Fill (3)
+    .word 0x4a3910 # Background Fill (4)
+    .word 0xFF0000 # Red (5)
+    .word 0x0000FF # Blue (6)
 
 .text
 
@@ -59,12 +64,67 @@ DrawPixel:
     jr $ra
 
 
+.globl DrawSquare
+# Draws a square with specified color and top-corner at (x1,y1)
+# $a0 = x1
+# $a1 = y1
+# $a2 = length
+# $a3 = color index
+DrawSquare:
+
+    addi $sp, $sp -4
+    sw $ra, 0($sp)
+
+    add $t8, $a0, $a2
+    add $t9, $a1, $a2
+
+    # Starts y count at y1
+    addi $t0, $a1, -1
+    DrawSquareYLoop:
+        addi $t0, $t0, 1
+        # Exit loop if y count > y2
+        beq $t0, $t9, DrawSquareReturn
+
+        # Starts x count at x1
+        addi $t1, $a0, -1
+
+    DrawSquareXLoop:
+        addi $t1, $t1, 1
+        
+        # Exit loop if x count > x2
+        beq $t1, $t8, DrawSquareYLoop
+
+        addi $sp, $sp, -16
+        sw $a0, 0($sp)
+        sw $a1, 4($sp)
+        sw $t0, 8($sp)
+        sw $t1, 12($sp)
+
+        move $a0, $t0
+        move $a1, $t1
+        move $a2, $a3
+        jal DrawPixel
+
+        lw $a0, 0($sp)
+        lw $a1, 4($sp)
+        lw $t0, 8($sp)
+        lw $t1, 12($sp)
+        addi $sp, $sp, 16
+
+        j DrawSquareXLoop
+
+    DrawSquareReturn:
+        lw $ra, 0($sp)
+        addi $sp, $sp, 4
+        jr $ra
+
 .globl DrawSprite
 # Draws a sprite from a given array of 8 bytes (8x8 px)
 # (x,y) position represents the top-left corner
 # $a0 = x-coordinate
 # $a1 = y-coordinate
 # $a2 = array address
+# $a3 = color index
 DrawSprite:
 
     addi $sp, $sp, -4
@@ -111,7 +171,8 @@ DrawSprite:
         # Get actual (x,y) coordinate
         add $a0, $a0, $t1
         add $a1, $a1, $t0
-        li $a2, 1
+        move $a2, $a3
+        # li $a2, 1
         jal DrawPixel
 
         lw $t0, 0($sp)
